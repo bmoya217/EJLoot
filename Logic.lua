@@ -1,12 +1,7 @@
 local addonName, Things = ...
 
 ThingsDB = ThingsDB or {}
-Things.saved = ThingsDB
-
-Things.difficulties = {"N", "H", "N10", "N25", "H10", "H25", "LFR", "M+", "N40", "", "HS", "NS", "", "N", "H", "M", "",
-                       "", "", "", "", "", "M"}
-
-Things.saved.mounts = Things.saved.mounts or {}
+ThingsDB.mounts = ThingsDB.mounts or {}
 Things.missingThings = Things.missingThings or {}
 Things.bosses = Things.bosses or {}
 
@@ -16,83 +11,11 @@ function Things.trackThing(bossName, thing)
 end
 
 function Things.trackMount(instance, mount)
-    Things.saved.mounts[instance] = Things.saved.mounts[instance] or {}
-
-    mount.encounters = (Things.saved.mounts[instance][mount.link] or {}).encounters or {}
+    ThingsDB.mounts[instance] = ThingsDB.mounts[instance] or {}
+    mount.encounters = (ThingsDB.mounts[instance][mount.link] or {}).encounters or {}
     mount.encounters[mount.difficulty] = mount.encounter
 
-    Things.saved.mounts[instance][mount.link] = mount
-end
-
-function Things.getMountStatus(mount, instanceName)
-    local status = {}
-
-    for difficultyID, shorthand in pairs(Things.difficulties) do
-        local encounter = mount.encounters[difficultyID]
-
-        if encounter then
-            local color = "|cff00FF00"
-
-            for instanceIndex = 1, GetNumSavedInstances() do
-                local instance, _, _, savedDifficultyID, locked = GetSavedInstanceInfo(instanceIndex)
-
-                if instance == instanceName and savedDifficultyID == difficultyID and locked then
-                    color = "|cffA8A8A8"
-                end
-            end
-
-            table.insert(status, color .. shorthand .. "|r")
-        end
-    end
-
-    return table.concat(status, " | ")
-end
-
-function Things.getMounts()
-    local text = "Missing mounts:\n"
-
-    for instance, mounts in pairs(Things.saved.mounts or {}) do
-        local header = "\n" .. instance
-        local body = ""
-
-        for link, mount in pairs(mounts) do
-            local status = Things.getMountStatus(mount, instance)
-
-            if not mount.hasMount then
-                body = body .. "\n  " .. link .. " " .. status
-            end
-        end
-
-        if body ~= "" then
-            text = text .. header .. body
-        end
-    end
-
-    if text == "Missing mounts:\n" then
-        return "Has all the mounts!"
-    end
-
-    return text
-end
-
-function Things.getThings()
-    local text = "Missing things:\n"
-
-    for _, bossName in pairs(Things.bosses) do
-        if Things.missingThings[bossName] then
-            text = text .. "\n" .. bossName
-
-            for _, thing in pairs(Things.missingThings[bossName]) do
-                text = text .. "\n  " .. thing.link
-            end
-        end
-    end
-
-    if text == "Missing things:\n" then
-        return "Has all the things!"
-    end
-
-    return text
+    ThingsDB.mounts[instance][mount.link] = mount
 end
 
 function Things.getFingerprint()
@@ -218,7 +141,6 @@ function Things:ShouldUpdate()
     end
 
     local fingerprint = Things.getFingerprint()
-
     if fingerprint ~= Things.fingerprint then
         Things.update()
         Things.stacks = (Things.stacks or 0) + 1
