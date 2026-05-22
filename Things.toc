@@ -1,0 +1,10 @@
+## Interface: 120005
+## Title: Things
+## Notes: Lightweight Adventure Guide collection helper
+## Author: tremens
+## Version: 0.0.1
+## SavedVariables: ThingsDB
+
+Logic.lua
+Core.lua
+UI.lua
