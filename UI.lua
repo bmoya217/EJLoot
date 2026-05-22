@@ -62,7 +62,6 @@ end
 
 function Things:TogglePositionMode()
     local settings = self:GetSettings()
-
     if settings.positionMode == POSITION.ENCOUNTER_JOURNAL then
         settings.positionMode = POSITION.SCREEN
     else
@@ -72,8 +71,6 @@ function Things:TogglePositionMode()
     self:ApplyFramePosition()
     self:UpdateHeaderHint()
     self:UpdateUI()
-
-    print("Things: position set to " .. settings.positionMode)
 end
 
 function Things:ApplyFramePosition()
@@ -89,7 +86,7 @@ function Things:ApplyFramePosition()
         local offset = EncounterJournal.instanceID and 40 or 8
 
         self.frame:SetParent(EncounterJournal)
-        self.frame:SetPoint("TOPLEFT", EncounterJournal, "TOPRIGHT", offset, -8)
+        self.frame:SetPoint("TOPLEFT", EncounterJournal, "TOPRIGHT", offset, 0)
         return
     end
 

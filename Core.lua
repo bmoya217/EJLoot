@@ -1,6 +1,5 @@
 local addonName, Things = ...
 
-Things.stacks = 0
 Things.timer = 0
 Things.fingerprint = ""
 
@@ -49,7 +48,6 @@ function Things:HandleEvent(event, ...)
     end
 
     if self:IsInstanceSelectShown() or not EncounterJournal.instanceID then
-        self.stacks = self.stacks + 1
         self:UpdateUI()
         return
     end

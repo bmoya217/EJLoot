@@ -142,11 +142,8 @@ function Things:ShouldUpdate()
 
     local fingerprint = Things.getFingerprint()
     if fingerprint ~= Things.fingerprint then
-        Things.update()
-        Things.stacks = (Things.stacks or 0) + 1
         Things.fingerprint = fingerprint
-    else
-        Things.stacks = 0
+        Things.update()
     end
 
     self:UpdateUI()
