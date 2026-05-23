@@ -28,7 +28,7 @@ function Things.getFingerprint()
     local num = EJ_GetNumLoot()
 
     return "i" .. tostring(instance) .. "e" .. tostring(encounter) .. "d" .. tostring(difficulty) .. "c" ..
-               tostring(class) .. "s" .. tostring(spec) .. "s" .. tostring(slot) .. "#" .. tostring(num)
+               tostring(class) .. "sp" .. tostring(spec) .. "sl" .. tostring(slot) .. "#" .. tostring(num)
 end
 
 function Things.updateEncounter(encounterID, bossName)
@@ -87,20 +87,15 @@ function Things.update()
     Things.missingThings = {}
     Things.bosses = {}
 
-    if not EncounterJournal then
-        return
-    end
-
     local selectedEncounterID = EncounterJournal.encounterID
     local instanceID = EncounterJournal.instanceID
-
     if not instanceID then
         return
     end
 
+    -- scan current boss
     if selectedEncounterID then
         local bossName = EJ_GetEncounterInfo(selectedEncounterID)
-
         if bossName then
             Things.updateEncounter(selectedEncounterID, bossName)
         end
@@ -108,11 +103,10 @@ function Things.update()
         return
     end
 
+    -- scan all bosses
     local i = 1
-
     while true do
         local bossName, _, encounterID = EJ_GetEncounterInfoByIndex(i)
-
         if not encounterID then
             break
         end
@@ -125,18 +119,7 @@ function Things.update()
 end
 
 function Things:ShouldUpdate()
-    if not self:IsFrameShownSetting() then
-        self:HideUI()
-        return
-    end
-
-    if not self:IsEncounterJournalOpen() then
-        self:UpdateUI()
-        return
-    end
-
-    if not EncounterJournal.instanceID then
-        self:UpdateUI()
+    if not EncounterJournal or not EncounterJournal.instanceID then
         return
     end
 

@@ -3,25 +3,18 @@ local addonName, Things = ...
 Things.timer = 0
 Things.fingerprint = ""
 
-local EVENTS = {"UPDATE_INSTANCE_INFO", "EJ_DIFFICULTY_UPDATE", "EJ_LOOT_DATA_RECIEVED", "GLOBAL_MOUSE_UP",
-                "TRANSMOG_COLLECTION_SOURCE_ADDED", "NEW_MOUNT_ADDED"}
+local EVENTS = {"UPDATE_INSTANCE_INFO", "EJ_DIFFICULTY_UPDATE", "GLOBAL_MOUSE_UP", -- affects fingerprint (maybe)
+"TRANSMOG_COLLECTION_SOURCE_ADDED", "NEW_MOUNT_ADDED", -- needs rescan
+"EJ_LOOT_DATA_RECIEVED" -- needs debounce
+}
 
-function Things:IsEncounterJournalOpen()
-    return EncounterJournal and EncounterJournal:IsShown()
-end
-
-function Things:IsInstanceSelectShown()
-    return EncounterJournalInstanceSelect and EncounterJournalInstanceSelect:IsShown()
-end
-
+-- todo: check sounds
 function Things:PlayFanfare()
-    local sound = "Interface\\CustomSounds\\fanfare" .. math.random(6) .. ".ogg"
+    local sound = "Interface\\AddOns\\Things\\Media\\fanfare" .. math.random(2) .. ".ogg"
     PlaySoundFile(sound, "Master")
 end
 
 function Things:Debounce()
-    self.fingerprint = ""
-
     if self.timer and self.timer ~= 0 then
         self.timer:Cancel()
     end
@@ -35,21 +28,8 @@ end
 function Things:HandleEvent(event, ...)
     if event == "TRANSMOG_COLLECTION_SOURCE_ADDED" or event == "NEW_MOUNT_ADDED" then
         self:PlayFanfare()
-    end
-
-    if not self:IsFrameShownSetting() then
-        self:HideUI()
-        return
-    end
-
-    if not self:IsEncounterJournalOpen() then
-        self:UpdateUI()
-        return
-    end
-
-    if self:IsInstanceSelectShown() or not EncounterJournal.instanceID then
-        self:UpdateUI()
-        return
+        -- forces a data reset on ShouldUpdate
+        self.fingerprint = nil
     end
 
     self:Debounce()

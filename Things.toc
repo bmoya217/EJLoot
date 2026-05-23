@@ -5,6 +5,9 @@
 ## Version: 0.0.1
 ## SavedVariables: ThingsDB
 
-Logic.lua
+src/Settings.lua
+src/Minimap.lua
+src/Logic.lua
+src/Frame.lua
+
 Core.lua
-UI.lua
