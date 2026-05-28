@@ -1,13 +1,14 @@
 ## Interface: 120005
-## Title: Things
+## Title: EJ Loot
 ## Notes: Lightweight Adventure Guide collection helper
 ## Author: tremens
 ## Version: 0.0.1
-## SavedVariables: ThingsDB
+## SavedVariables: EJLootDB
 
 src/Settings.lua
-src/Minimap.lua
 src/Logic.lua
 src/Frame.lua
+src/Render.lua
+src/Minimap.lua
 
 Core.lua

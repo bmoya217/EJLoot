@@ -1,24 +1,24 @@
-local addonName, Things = ...
+local addonName, EJLoot = ...
 
-ThingsDB = ThingsDB or {}
-ThingsDB.mounts = ThingsDB.mounts or {}
-Things.missingThings = Things.missingThings or {}
-Things.bosses = Things.bosses or {}
+EJLootDB = EJLootDB or {}
+EJLootDB.mounts = EJLootDB.mounts or {}
+EJLoot.missingItems = EJLoot.missingItems or {}
+EJLoot.bosses = EJLoot.bosses or {}
 
-function Things.trackThing(bossName, thing)
-    Things.missingThings[bossName] = Things.missingThings[bossName] or {}
-    table.insert(Things.missingThings[bossName], thing)
+function EJLoot:trackItem(bossName, item)
+    self.missingItems[bossName] = self.missingItems[bossName] or {}
+    table.insert(self.missingItems[bossName], item)
 end
 
-function Things.trackMount(instance, mount)
-    ThingsDB.mounts[instance] = ThingsDB.mounts[instance] or {}
-    mount.encounters = (ThingsDB.mounts[instance][mount.link] or {}).encounters or {}
+function EJLoot:trackMount(instance, mount)
+    EJLootDB.mounts[instance] = EJLootDB.mounts[instance] or {}
+    mount.encounters = (EJLootDB.mounts[instance][mount.link] or {}).encounters or {}
     mount.encounters[mount.difficulty] = mount.encounter
 
-    ThingsDB.mounts[instance][mount.link] = mount
+    EJLootDB.mounts[instance][mount.link] = mount
 end
 
-function Things.getFingerprint()
+function EJLoot.getFingerprint()
     local instance = EncounterJournal.instanceID
     local encounterSelected = not EncounterJournalInstanceSelect or not EncounterJournalInstanceSelect:IsShown()
     local encounter = encounterSelected and EncounterJournal.encounterID or "x"
@@ -31,9 +31,9 @@ function Things.getFingerprint()
                tostring(class) .. "sp" .. tostring(spec) .. "sl" .. tostring(slot) .. "#" .. tostring(num)
 end
 
-function Things.updateEncounter(encounterID, bossName)
+function EJLoot:ScanEncounter(encounterID, bossName)
     EJ_SelectEncounter(encounterID)
-    table.insert(Things.bosses, bossName)
+    table.insert(self.bosses, bossName)
 
     local numLoot = EJ_GetNumLoot()
 
@@ -58,7 +58,7 @@ function Things.updateEncounter(encounterID, bossName)
                 end
 
                 if not hasMog then
-                    Things.trackThing(bossName, itemInfo)
+                    self:trackItem(bossName, itemInfo)
                 end
             end
         end
@@ -75,31 +75,30 @@ function Things.updateEncounter(encounterID, bossName)
                 itemInfo.encounter = bossName
                 itemInfo.mountID = mountID
 
-                Things.trackMount(EJ_GetInstanceInfo(), itemInfo)
+                self:trackMount(EJ_GetInstanceInfo(), itemInfo)
 
                 if not hasMount then
-                    Things.trackThing(bossName, itemInfo)
+                    self:trackItem(bossName, itemInfo)
                 end
             end
         end
     end
 end
 
-function Things.update()
-    Things.missingThings = {}
-    Things.bosses = {}
+function EJLoot:Scan()
+    self.missingItems = {}
+    self.bosses = {}
 
-    local selectedEncounterID = EncounterJournal.encounterID
     local instanceID = EncounterJournal.instanceID
     if not instanceID then
         return
     end
 
     -- scan current boss
-    if selectedEncounterID then
-        local bossName = EJ_GetEncounterInfo(selectedEncounterID)
+    if EncounterJournal.encounterID then
+        local bossName = EJ_GetEncounterInfo(EncounterJournal.encounterID)
         if bossName then
-            Things.updateEncounter(selectedEncounterID, bossName)
+            self:ScanEncounter(EncounterJournal.encounterID, bossName)
         end
 
         return
@@ -113,7 +112,7 @@ function Things.update()
             break
         end
 
-        Things.updateEncounter(encounterID, bossName)
+        self:ScanEncounter(encounterID, bossName)
         i = i + 1
     end
 
@@ -121,40 +120,39 @@ function Things.update()
 end
 
 -- CORE
-function Things:ShouldUpdate()
+function EJLoot:ShouldScan()
     if not EncounterJournal or not EncounterJournal.instanceID then
         return
     end
 
-    local fingerprint = Things.getFingerprint()
-    if fingerprint ~= Things.fingerprint then
-        Things.fingerprint = fingerprint
-        Things.update()
+    local fingerprint = self.getFingerprint()
+    if fingerprint ~= self.fingerprint then
+        self.fingerprint = fingerprint
+        self:Scan()
     end
 
     self:UpdateUI()
 end
 
-function Things:PruneMog(sourceID)
+function EJLoot:PruneMog(sourceID)
     local itemInfo = C_TransmogCollection.GetAppearanceSourceInfo(sourceID)
-
-    if not itemInfo.itemAppearanceID then
+    if not itemInfo or not itemInfo.itemAppearanceID then
         return
     end
 
     local pruned = false
-    for bossName, things in pairs(self.missingThings or {}) do
-        for i = #things, 1, -1 do
-            local thing = things[i]
+    for bossName, items in pairs(self.missingItems or {}) do
+        for i = #items, 1, -1 do
+            local item = items[i]
 
-            if thing.appearanceID == itemInfo.itemAppearanceID then
-                table.remove(things, i)
+            if item.appearanceID == itemInfo.itemAppearanceID then
+                table.remove(items, i)
                 pruned = true
             end
         end
 
-        if #things == 0 then
-            self.missingThings[bossName] = nil
+        if #items == 0 then
+            self.missingItems[bossName] = nil
         end
     end
 
@@ -163,24 +161,24 @@ function Things:PruneMog(sourceID)
     end
 end
 
-function Things:PruneMount(mountID)
+function EJLoot:PruneMount(mountID)
     local pruned = false
-    for bossName, things in pairs(self.missingThings or {}) do
-        for i = #things, 1, -1 do
-            local thing = things[i]
+    for bossName, items in pairs(self.missingItems or {}) do
+        for i = #items, 1, -1 do
+            local item = items[i]
 
-            if thing.mountID == mountID then
-                table.remove(things, i)
+            if item.mountID == mountID then
+                table.remove(items, i)
                 pruned = true
             end
         end
 
-        if #things == 0 then
-            self.missingThings[bossName] = nil
+        if #items == 0 then
+            self.missingItems[bossName] = nil
         end
     end
 
-    for instance, mounts in pairs(ThingsDB.mounts or {}) do
+    for instance, mounts in pairs(EJLootDB.mounts or {}) do
         for link, mount in pairs(mounts) do
             if mount.mountID == mountID then
                 mount.hasMount = true

@@ -1,4 +1,4 @@
-local addonName, Things = ...
+local addonName, EJLoot = ...
 
 local DISPLAY = {
     SHOW = "SHOW",
@@ -10,26 +10,26 @@ local POSITION = {
     ENCOUNTER_JOURNAL = "ENCOUNTER_JOURNAL"
 }
 
-function Things:GetSettings()
-    ThingsDB = ThingsDB or {}
-    ThingsDB.settings = ThingsDB.settings or {}
-    ThingsDB.mounts = ThingsDB.mounts or {}
+function EJLoot:GetSettings()
+    EJLootDB = EJLootDB or {}
+    EJLootDB.settings = EJLootDB.settings or {}
+    EJLootDB.mounts = EJLootDB.mounts or {}
 
-    ThingsDB.settings.display = ThingsDB.settings.display or DISPLAY.SHOW
-    ThingsDB.settings.positionMode = ThingsDB.settings.positionMode or POSITION.ENCOUNTER_JOURNAL
+    EJLootDB.settings.display = EJLootDB.settings.display or DISPLAY.SHOW
+    EJLootDB.settings.positionMode = EJLootDB.settings.positionMode or POSITION.ENCOUNTER_JOURNAL
 
-    return ThingsDB.settings
+    return EJLootDB.settings
 end
 
-function Things:IsFrameAnchoredSetting()
+function EJLoot:IsFrameAnchoredSetting()
     return self:GetSettings().positionMode == POSITION.ENCOUNTER_JOURNAL
 end
 
-function Things:IsFrameShownSetting()
+function EJLoot:IsFrameShownSetting()
     return self:GetSettings().display == DISPLAY.SHOW
 end
 
-function Things:SetFrameDisplay(display)
+function EJLoot:SetFrameDisplay(display)
     self:GetSettings().display = display
 
     if display == DISPLAY.HIDE then
@@ -39,7 +39,7 @@ function Things:SetFrameDisplay(display)
     end
 end
 
-function Things:ToggleFrameDisplay()
+function EJLoot:ToggleFrameDisplay()
     if self:IsFrameShownSetting() then
         self:SetFrameDisplay(DISPLAY.HIDE)
     else
@@ -47,7 +47,7 @@ function Things:ToggleFrameDisplay()
     end
 end
 
-function Things:TogglePositionMode()
+function EJLoot:TogglePositionMode()
     local settings = self:GetSettings()
     if self:IsFrameAnchoredSetting() then
         settings.positionMode = POSITION.SCREEN

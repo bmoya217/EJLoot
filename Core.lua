@@ -1,32 +1,32 @@
-local addonName, Things = ...
+local addonName, EJLoot = ...
 
-Things.timer = 0
-Things.fingerprint = ""
+EJLoot.timer = 0
+EJLoot.fingerprint = ""
 
-local EVENTS = {"UPDATE_INSTANCE_INFO", "EJ_DIFFICULTY_UPDATE", "GLOBAL_MOUSE_UP", -- affects fingerprint (maybe)
-"TRANSMOG_COLLECTION_SOURCE_ADDED", "NEW_MOUNT_ADDED", -- needs rescan
-"EJ_LOOT_DATA_RECIEVED" -- needs debounce
+local EVENTS = {"ADDON_LOADED", -- init
+"UPDATE_INSTANCE_INFO", "EJ_DIFFICULTY_UPDATE", "GLOBAL_MOUSE_UP", -- affects fingerprint (maybe)
+"EJ_LOOT_DATA_RECIEVED", -- debounce delay for other fingerprint events
+"TRANSMOG_COLLECTION_SOURCE_ADDED", "NEW_MOUNT_ADDED" -- manual prune
 }
 
--- todo: check sounds
-function Things:PlayFanfare()
-    local sound = "Interface\\AddOns\\Things\\Media\\fanfare" .. math.random(2) .. ".ogg"
-    PlaySoundFile(sound, "Master")
-end
-
-function Things:Debounce()
+function EJLoot:Debounce()
     if self.timer and self.timer ~= 0 then
         self.timer:Cancel()
     end
 
     self.timer = C_Timer.NewTimer(0.5, function()
         self.timer = 0
-        self:ShouldUpdate()
+        self:ShouldScan()
     end)
 end
 
-function Things:HandleEvent(event, ...)
-    if event == "TRANSMOG_COLLECTION_SOURCE_ADDED" then
+function EJLoot:HandleEvent(event, ...)
+    if event == "ADDON_LOADED" then
+        local addon = ...
+        if addon == addonName then
+            self:UpdateUI()
+        end
+    elseif event == "TRANSMOG_COLLECTION_SOURCE_ADDED" then
         local sourceID = ...
         self:PruneMog(sourceID)
     elseif event == "NEW_MOUNT_ADDED" then
@@ -38,11 +38,10 @@ function Things:HandleEvent(event, ...)
 end
 
 local eventFrame = CreateFrame("Frame")
-
 for _, event in ipairs(EVENTS) do
     eventFrame:RegisterEvent(event)
 end
 
 eventFrame:SetScript("OnEvent", function(_, event, ...)
-    Things:HandleEvent(event, ...)
+    EJLoot:HandleEvent(event, ...)
 end)

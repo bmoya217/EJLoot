@@ -1,6 +1,6 @@
-local addonName, Things = ...
+local addonName, EJLoot = ...
 
-function Things:UpdateMinimapTooltip()
+function EJLoot:UpdateMinimapTooltip()
     if not self.minimapButton or not self.minimapButton:IsMouseOver() then
         return
     end
@@ -8,7 +8,7 @@ function Things:UpdateMinimapTooltip()
     local settings = self:GetSettings()
     GameTooltip:SetOwner(self.minimapButton, "ANCHOR_LEFT")
     GameTooltip:ClearLines()
-    GameTooltip:SetText("Things")
+    GameTooltip:SetText("EJ Loot")
     GameTooltip:AddLine("Left-click: show/hide frame", 1, 1, 1)
     GameTooltip:AddLine("Right-click: toggle screen / Adventure Guide position", 1, 1, 1)
     GameTooltip:AddLine("Drag: move minimap button", 1, 1, 1)
@@ -18,17 +18,17 @@ function Things:UpdateMinimapTooltip()
     GameTooltip:Show()
 end
 
-function Things:CreateMinimapButton()
+function EJLoot:CreateMinimapButton()
     if self.minimapButton then
         return
     end
 
-    ThingsDB = ThingsDB or {}
-    ThingsDB.minimap = ThingsDB.minimap or {
+    EJLootDB = EJLootDB or {}
+    EJLootDB.minimap = EJLootDB.minimap or {
         angle = 225
     }
 
-    local button = CreateFrame("Button", "ThingsMinimapButton", Minimap)
+    local button = CreateFrame("Button", "EJLootMinimapButton", Minimap)
     button:SetSize(31, 31)
     button:SetFrameStrata("MEDIUM")
     button:SetFrameLevel(Minimap:GetFrameLevel() + 5)
@@ -59,7 +59,7 @@ function Things:CreateMinimapButton()
     border:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
 
     local function updatePosition()
-        local angle = math.rad(ThingsDB.minimap.angle or 225)
+        local angle = math.rad(EJLootDB.minimap.angle or 225)
         local radius = 100
         local x = math.cos(angle) * radius
         local y = math.sin(angle) * radius
@@ -69,7 +69,7 @@ function Things:CreateMinimapButton()
     end
 
     button:SetScript("OnEnter", function()
-        Things:UpdateMinimapTooltip()
+        EJLoot:UpdateMinimapTooltip()
     end)
 
     button:SetScript("OnLeave", function()
@@ -78,12 +78,12 @@ function Things:CreateMinimapButton()
 
     button:SetScript("OnClick", function(_, mouseButton)
         if mouseButton == "RightButton" then
-            Things:TogglePositionMode()
+            EJLoot:TogglePositionMode()
         else
-            Things:ToggleFrameDisplay()
+            EJLoot:ToggleFrameDisplay()
         end
 
-        Things:UpdateMinimapTooltip()
+        EJLoot:UpdateMinimapTooltip()
     end)
 
     button:SetScript("OnDragStart", function(buttonSelf)
@@ -95,14 +95,14 @@ function Things:CreateMinimapButton()
             px = px / scale
             py = py / scale
 
-            ThingsDB.minimap.angle = math.deg(math.atan2(py - my, px - mx))
+            EJLootDB.minimap.angle = math.deg(math.atan2(py - my, px - mx))
             updatePosition()
         end)
     end)
 
     button:SetScript("OnDragStop", function(buttonSelf)
         buttonSelf:SetScript("OnUpdate", nil)
-        Things:UpdateMinimapTooltip()
+        EJLoot:UpdateMinimapTooltip()
     end)
 
     self.minimapButton = button
@@ -110,5 +110,5 @@ function Things:CreateMinimapButton()
 end
 
 C_Timer.After(1, function()
-    Things:CreateMinimapButton()
+    EJLoot:CreateMinimapButton()
 end)

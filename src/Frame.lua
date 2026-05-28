@@ -1,46 +1,16 @@
-local addonName, Things = ...
-
--- constants
-local DIFFICULTIES = {"N", "H", "N10", "N25", "H10", "H25", "LFR", "M+", "N40", "", "HS", "NS", "", "N", "H", "M", "",
-                      "", "", "", "", "", "M"}
-
--- utility helpers
-function Things:GetMountStatus(mount, instanceName)
-    local status = {}
-
-    for difficultyID, shorthand in pairs(DIFFICULTIES) do
-        local encounter = mount.encounters and mount.encounters[difficultyID]
-
-        if encounter then
-            local color = "|cff00FF00"
-
-            for instanceIndex = 1, GetNumSavedInstances() do
-                local instance, _, _, savedDifficultyID, locked = GetSavedInstanceInfo(instanceIndex)
-
-                if instance == instanceName and savedDifficultyID == difficultyID and locked then
-                    color = "|cffA8A8A8"
-                    break
-                end
-            end
-
-            table.insert(status, color .. shorthand .. "|r")
-        end
-    end
-
-    return table.concat(status, " | ")
-end
+local addonName, EJLoot = ...
 
 -- logic helpers 
-function Things:IsEncounterJournalOpen()
+function EJLoot:IsEncounterJournalOpen()
     return EncounterJournal and EncounterJournal:IsShown()
 end
 
-function Things:ShouldRenderMounts()
-    return not EncounterJournal.instanceID or
+function EJLoot:ShouldRenderMounts()
+    return not EncounterJournal or not EncounterJournal.instanceID or
                (EncounterJournalInstanceSelect and EncounterJournalInstanceSelect:IsShown())
 end
 
-function Things:ShouldShowFrame()
+function EJLoot:ShouldShowFrame()
     if not self:IsFrameShownSetting() then
         return false
     end
@@ -52,13 +22,11 @@ function Things:ShouldShowFrame()
     return true
 end
 
--- functional helpers
-function Things:ApplyFramePosition()
+-- utility helpers
+function EJLoot:ApplyFramePosition()
     if not self.frame then
         return
     end
-
-    local settings = self:GetSettings()
 
     self.frame:ClearAllPoints()
 
@@ -71,18 +39,18 @@ function Things:ApplyFramePosition()
 
     self.frame:SetParent(UIParent)
 
-    ThingsDB.position = ThingsDB.position or {
+    EJLootDB.position = EJLootDB.position or {
         point = "CENTER",
         relativePoint = "CENTER",
         x = 0,
         y = 0
     }
 
-    self.frame:SetPoint(ThingsDB.position.point, UIParent, ThingsDB.position.relativePoint, ThingsDB.position.x,
-        ThingsDB.position.y)
+    self.frame:SetPoint(EJLootDB.position.point, UIParent, EJLootDB.position.relativePoint, EJLootDB.position.x,
+        EJLootDB.position.y)
 end
 
-function Things:UpdateHeaderHint()
+function EJLoot:UpdateHeaderHint()
     if not self.frame or not self.frame.hint then
         return
     end
@@ -94,198 +62,13 @@ function Things:UpdateHeaderHint()
     end
 end
 
-function Things:ShowUI()
-    if not self:ShouldShowFrame() then
-        self:HideUI()
-        return
-    end
-
-    self:CreateUI()
-    self.frame:Show()
-end
-
-function Things:HideUI()
-    if self.frame then
-        self.frame:Hide()
-    end
-end
-
-function Things:ClearRows()
-    self.rows = self.rows or {}
-
-    for _, row in ipairs(self.rows) do
-        row:Hide()
-        row.link = nil
-    end
-
-    self.rowIndex = 1
-end
-
-function Things:GetRow()
-    self.rows = self.rows or {}
-
-    local row = self.rows[self.rowIndex]
-
-    if not row then
-        row = CreateFrame("Button", nil, self.content)
-        row:SetSize(360, 20)
-        row:EnableMouse(true)
-        row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-
-        row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-        row.text:SetPoint("LEFT")
-        row.text:SetJustifyH("LEFT")
-
-        row:SetScript("OnEnter", function(rowSelf)
-            if rowSelf.link then
-                GameTooltip:SetOwner(rowSelf, "ANCHOR_RIGHT")
-                GameTooltip:ClearLines()
-                GameTooltip:SetHyperlink(rowSelf.link)
-                GameTooltip:Show()
-            end
-        end)
-
-        row:SetScript("OnLeave", function()
-            GameTooltip:Hide()
-        end)
-
-        row:SetScript("OnClick", function(rowSelf)
-            if rowSelf.link and IsModifiedClick("CHATLINK") then
-                ChatEdit_InsertLink(rowSelf.link)
-            end
-        end)
-
-        self.rows[self.rowIndex] = row
-    end
-
-    self.rowIndex = self.rowIndex + 1
-    return row
-end
-
-function Things:AddHeader(text, y)
-    local row = self:GetRow()
-    row:ClearAllPoints()
-    row:SetPoint("TOPLEFT", self.content, "TOPLEFT", 8, y)
-    row:SetSize(360, 22)
-    row.link = nil
-    row.text:SetFontObject("GameFontNormal")
-    row.text:SetText(text)
-    row:Show()
-
-    return y - 24
-end
-
-function Things:AddLink(link, status, y)
-    local row = self:GetRow()
-    row:ClearAllPoints()
-    row:SetPoint("TOPLEFT", self.content, "TOPLEFT", 20, y)
-    row:SetSize(360, 20)
-    row.link = link
-    row.text:SetFontObject("GameFontHighlight")
-
-    if status and status ~= "" then
-        row.text:SetText(link .. " " .. status)
-    else
-        row.text:SetText(link)
-    end
-
-    row:Show()
-
-    return y - 20
-end
-
--- render
-function Things:RenderMounts()
-    self:ClearRows()
-
-    local y = -8
-    local hasAny = false
-
-    y = self:AddHeader("Mounts", y)
-
-    for instance, mounts in pairs(ThingsDB.mounts or {}) do
-        local addedInstance = false
-
-        for link, mount in pairs(mounts) do
-            if not mount.hasMount then
-                if not addedInstance then
-                    y = self:AddHeader(instance, y)
-                    addedInstance = true
-                end
-
-                y = self:AddLink(link, self:GetMountStatus(mount, instance), y)
-                hasAny = true
-            end
-        end
-
-        if addedInstance then
-            y = y - 8
-        end
-    end
-
-    if not hasAny then
-        y = self:AddHeader("Has all the mounts!", y)
-    end
-
-    self.content:SetHeight(math.abs(y) + 20)
-end
-
-function Things:RenderThings()
-    self:ClearRows()
-
-    local y = -8
-    local hasAny = false
-
-    y = self:AddHeader("Loot", y)
-
-    for _, bossName in ipairs(self.bosses or {}) do
-        local things = self.missingThings and self.missingThings[bossName]
-
-        if things and #things > 0 then
-            local addedBoss = false
-
-            for _, thing in ipairs(things) do
-                if thing.link then
-                    if not addedBoss then
-                        y = self:AddHeader(bossName, y)
-                        addedBoss = true
-                    end
-
-                    y = self:AddLink(thing.link, nil, y)
-                    hasAny = true
-                end
-            end
-
-            if addedBoss then
-                y = y - 8
-            end
-        end
-    end
-
-    if not hasAny then
-        y = self:AddHeader("Has all the things!", y)
-    end
-
-    self.content:SetHeight(math.abs(y) + 20)
-end
-
-function Things:RenderMessage(title, message)
-    self:ClearRows()
-
-    local y = -8
-    y = self:AddHeader(title, y)
-    y = self:AddHeader(message, y)
-
-    self.content:SetHeight(math.abs(y) + 20)
-end
-
 -- base ui logic
-function Things:CreateUI()
+function EJLoot:CreateUI()
     if self.frame then
         return
     end
 
-    local frame = CreateFrame("Frame", "ThingsFrame", UIParent, "BackdropTemplate")
+    local frame = CreateFrame("Frame", "EJLootFrame", UIParent, "BackdropTemplate")
     frame:SetSize(420, 500)
     frame:SetFrameStrata("HIGH")
     frame:SetMovable(true)
@@ -319,7 +102,7 @@ function Things:CreateUI()
         if not self:IsFrameAnchoredSetting() then
             local point, _, relativePoint, x, y = frameSelf:GetPoint()
 
-            ThingsDB.position = {
+            EJLootDB.position = {
                 point = point,
                 relativePoint = relativePoint,
                 x = x,
@@ -330,12 +113,12 @@ function Things:CreateUI()
 
     local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOPLEFT", 12, -10)
-    title:SetText("Things")
+    title:SetText("EJ Loot")
 
     local close = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
     close:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -4, -4)
     close:SetScript("OnClick", function()
-        Things:ToggleFrameDisplay()
+        EJLoot:ToggleFrameDisplay()
     end)
 
     local hint = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
@@ -363,7 +146,23 @@ function Things:CreateUI()
     self:UpdateHeaderHint()
 end
 
-function Things:UpdateUI()
+function EJLoot:ShowUI()
+    if not self:ShouldShowFrame() then
+        self:HideUI()
+        return
+    end
+
+    self:CreateUI()
+    self.frame:Show()
+end
+
+function EJLoot:HideUI()
+    if self.frame then
+        self.frame:Hide()
+    end
+end
+
+function EJLoot:UpdateUI()
     if not self:ShouldShowFrame() then
         self:HideUI()
         return
@@ -378,7 +177,7 @@ function Things:UpdateUI()
     -- Screen mode + EJ closed:
     if not self:IsEncounterJournalOpen() then
         if not self.hasRenderedOnce then
-            self:RenderMessage("Things", "Open the Adventure Guide to scan missing things.")
+            self:RenderMessage("EJ Loot", "Open the Adventure Guide to scan missing loot.")
             self.hasRenderedOnce = true
         end
 
@@ -389,7 +188,7 @@ function Things:UpdateUI()
     if self:ShouldRenderMounts() then
         self:RenderMounts()
     else
-        self:RenderThings()
+        self:RenderLoot()
     end
 
     self.hasRenderedOnce = true
