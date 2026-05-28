@@ -69,7 +69,7 @@ function EJLoot:CreateUI()
     end
 
     local frame = CreateFrame("Frame", "EJLootFrame", UIParent, "BackdropTemplate")
-    frame:SetSize(420, 500)
+    frame:SetSize(self.FRAME_WIDTH, self.FRAME_HEIGHT)
     frame:SetFrameStrata("HIGH")
     frame:SetMovable(true)
     frame:EnableMouse(true)
@@ -130,7 +130,7 @@ function EJLoot:CreateUI()
     scrollFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -28, 12)
 
     local content = CreateFrame("Frame", nil, scrollFrame)
-    content:SetSize(360, 1)
+    content:SetSize(self.CONTENT_WIDTH, 1)
 
     scrollFrame:SetScrollChild(content)
 
@@ -163,33 +163,20 @@ function EJLoot:HideUI()
 end
 
 function EJLoot:UpdateUI()
-    if not self:ShouldShowFrame() then
+    if self:ShouldShowFrame() then
+        self:ShowUI()
+    else
         self:HideUI()
-        return
     end
 
-    self:ShowUI()
-    self:UpdateHeaderHint()
     if self:IsFrameAnchoredSetting() then
         self:ApplyFramePosition()
     end
 
-    -- Screen mode + EJ closed:
-    if not self:IsEncounterJournalOpen() then
-        if not self.hasRenderedOnce then
-            self:RenderMessage("EJ Loot", "Open the Adventure Guide to scan missing loot.")
-            self.hasRenderedOnce = true
-        end
-
-        return
-    end
-
-    -- EJ open: now decide based on current EJ state.
+    self:UpdateHeaderHint()
     if self:ShouldRenderMounts() then
         self:RenderMounts()
     else
         self:RenderLoot()
     end
-
-    self.hasRenderedOnce = true
 end

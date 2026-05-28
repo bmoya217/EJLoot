@@ -6,7 +6,7 @@ local DIFFICULTIES = {"N", "H", "N10", "N25", "H10", "H25", "LFR", "M+", "N40", 
 function EJLoot:GetMountStatus(mount, instanceName)
     local status = {}
 
-    for difficultyID, shorthand in pairs(DIFFICULTIES) do
+    for difficultyID, shorthand in ipairs(DIFFICULTIES) do
         local encounter = mount.encounters and mount.encounters[difficultyID]
 
         if encounter then
@@ -29,6 +29,7 @@ function EJLoot:GetMountStatus(mount, instanceName)
 end
 
 function EJLoot:ClearRows()
+    self:CreateUI()
     self.rows = self.rows or {}
 
     for _, row in ipairs(self.rows) do
@@ -46,7 +47,7 @@ function EJLoot:GetRow()
 
     if not row then
         row = CreateFrame("Button", nil, self.content)
-        row:SetSize(360, 20)
+        row:SetSize(self.ROW_WIDTH, 20)
         row:EnableMouse(true)
         row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
@@ -84,7 +85,7 @@ function EJLoot:AddHeader(text, y)
     local row = self:GetRow()
     row:ClearAllPoints()
     row:SetPoint("TOPLEFT", self.content, "TOPLEFT", 8, y)
-    row:SetSize(360, 22)
+    row:SetSize(self.ROW_WIDTH, 22)
     row.link = nil
     row.text:SetFontObject("GameFontNormal")
     row.text:SetText(text)
@@ -93,11 +94,26 @@ function EJLoot:AddHeader(text, y)
     return y - 24
 end
 
+function EJLoot:AddSubHeader(text, y)
+    local row = self:GetRow()
+    row:ClearAllPoints()
+    row:SetPoint("TOPLEFT", self.content, "TOPLEFT", 8, y)
+    row:SetSize(300, 32)
+    row.link = nil
+    row.text:SetFontObject("GameFontDisableSmall")
+    row.text:SetText(text)
+    row.text:SetWidth(self.ROW_WIDTH)
+    row.text:SetJustifyH("LEFT")
+    row:Show()
+
+    return y - 34
+end
+
 function EJLoot:AddLink(link, status, y)
     local row = self:GetRow()
     row:ClearAllPoints()
-    row:SetPoint("TOPLEFT", self.content, "TOPLEFT", 20, y)
-    row:SetSize(360, 20)
+    row:SetPoint("TOPLEFT", self.content, "TOPLEFT", self.LINK_LEFT_OFFSET, y)
+    row:SetSize(self.LINK_ROW_WIDTH, 20)
     row.link = link
     row.text:SetFontObject("GameFontHighlight")
 
@@ -112,23 +128,12 @@ function EJLoot:AddLink(link, status, y)
     return y - 20
 end
 
-function EJLoot:RenderMessage(title, message)
-    self:ClearRows()
-
-    local y = -8
-    y = self:AddHeader(title, y)
-    y = self:AddHeader(message, y)
-
-    self.content:SetHeight(math.abs(y) + 20)
-end
-
 function EJLoot:RenderLoot()
     self:ClearRows()
+    self.frame.title:SetText("EJ Loot")
 
     local y = -8
     local hasAny = false
-
-    y = self:AddHeader("Loot", y)
 
     for _, bossName in ipairs(self.bosses or {}) do
         local items = self.missingItems and self.missingItems[bossName]
@@ -155,7 +160,7 @@ function EJLoot:RenderLoot()
     end
 
     if not hasAny then
-        y = self:AddHeader("Has all the loots!", y)
+        y = self:AddHeader("All appearances collected for this view.", y)
     end
 
     self.content:SetHeight(math.abs(y) + 20)
@@ -163,11 +168,11 @@ end
 
 function EJLoot:RenderMounts()
     self:ClearRows()
+    self.frame.title:SetText("EJ Mounts")
+    self:AddSubHeader("Select EJ instance to view items.", 12)
 
     local y = -8
     local hasAny = false
-
-    y = self:AddHeader("Mounts", y)
 
     for instance, mounts in pairs(EJLootDB.mounts or {}) do
         local addedInstance = false

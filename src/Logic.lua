@@ -5,12 +5,12 @@ EJLootDB.mounts = EJLootDB.mounts or {}
 EJLoot.missingItems = EJLoot.missingItems or {}
 EJLoot.bosses = EJLoot.bosses or {}
 
-function EJLoot:trackItem(bossName, item)
+function EJLoot:TrackItem(bossName, item)
     self.missingItems[bossName] = self.missingItems[bossName] or {}
     table.insert(self.missingItems[bossName], item)
 end
 
-function EJLoot:trackMount(instance, mount)
+function EJLoot:TrackMount(instance, mount)
     EJLootDB.mounts[instance] = EJLootDB.mounts[instance] or {}
     mount.encounters = (EJLootDB.mounts[instance][mount.link] or {}).encounters or {}
     mount.encounters[mount.difficulty] = mount.encounter
@@ -58,28 +58,26 @@ function EJLoot:ScanEncounter(encounterID, bossName)
                 end
 
                 if not hasMog then
-                    self:trackItem(bossName, itemInfo)
+                    self:TrackItem(bossName, itemInfo)
                 end
             end
         end
 
-        if itemInfo and itemInfo.armorType == "Mount" then
-            local mountID = C_MountJournal.GetMountFromItem(itemInfo.itemID)
+        local mountID = itemInfo and itemInfo.itemID and C_MountJournal.GetMountFromItem(itemInfo.itemID)
 
-            if mountID then
-                local _, spellID, _, _, _, _, _, _, _, _, hasMount = C_MountJournal.GetMountInfoByID(mountID)
+        if mountID then
+            local _, spellID, _, _, _, _, _, _, _, _, hasMount = C_MountJournal.GetMountInfoByID(mountID)
 
-                itemInfo.link = C_MountJournal.GetMountLink(spellID)
-                itemInfo.hasMount = hasMount
-                itemInfo.difficulty = EJ_GetDifficulty()
-                itemInfo.encounter = bossName
-                itemInfo.mountID = mountID
+            itemInfo.link = C_MountJournal.GetMountLink(spellID)
+            itemInfo.hasMount = hasMount
+            itemInfo.difficulty = EJ_GetDifficulty()
+            itemInfo.encounter = bossName
+            itemInfo.mountID = mountID
 
-                self:trackMount(EJ_GetInstanceInfo(), itemInfo)
+            self:TrackMount(EJ_GetInstanceInfo(), itemInfo)
 
-                if not hasMount then
-                    self:trackItem(bossName, itemInfo)
-                end
+            if not hasMount then
+                self:TrackItem(bossName, itemInfo)
             end
         end
     end

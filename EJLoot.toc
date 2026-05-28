@@ -5,6 +5,7 @@
 ## Version: 0.0.1
 ## SavedVariables: EJLootDB
 
+src/Constants.lua
 src/Settings.lua
 src/Logic.lua
 src/Frame.lua
