@@ -26,13 +26,15 @@ function Things:Debounce()
 end
 
 function Things:HandleEvent(event, ...)
-    if event == "TRANSMOG_COLLECTION_SOURCE_ADDED" or event == "NEW_MOUNT_ADDED" then
-        self:PlayFanfare()
-        -- forces a data reset on ShouldUpdate
-        self.fingerprint = nil
+    if event == "TRANSMOG_COLLECTION_SOURCE_ADDED" then
+        local sourceID = ...
+        self:PruneMog(sourceID)
+    elseif event == "NEW_MOUNT_ADDED" then
+        local mountID = ...
+        self:PruneMount(mountID)
+    else
+        self:Debounce()
     end
-
-    self:Debounce()
 end
 
 local eventFrame = CreateFrame("Frame")

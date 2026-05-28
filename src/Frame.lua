@@ -201,7 +201,7 @@ function Things:RenderMounts()
     local y = -8
     local hasAny = false
 
-    y = self:AddHeader("Missing mounts", y)
+    y = self:AddHeader("Mounts", y)
 
     for instance, mounts in pairs(ThingsDB.mounts or {}) do
         local addedInstance = false
@@ -236,7 +236,7 @@ function Things:RenderThings()
     local y = -8
     local hasAny = false
 
-    y = self:AddHeader("Missing things", y)
+    y = self:AddHeader("Loot", y)
 
     for _, bossName in ipairs(self.bosses or {}) do
         local things = self.missingThings and self.missingThings[bossName]

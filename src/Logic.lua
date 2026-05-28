@@ -44,6 +44,7 @@ function Things.updateEncounter(encounterID, bossName)
             local appearanceID = C_TransmogCollection.GetItemInfo(itemInfo.link)
 
             if appearanceID then
+                itemInfo.appearanceID = appearanceID
                 local hasMog = false
                 local sources = C_TransmogCollection.GetAllAppearanceSources(appearanceID)
 
@@ -72,6 +73,7 @@ function Things.updateEncounter(encounterID, bossName)
                 itemInfo.hasMount = hasMount
                 itemInfo.difficulty = EJ_GetDifficulty()
                 itemInfo.encounter = bossName
+                itemInfo.mountID = mountID
 
                 Things.trackMount(EJ_GetInstanceInfo(), itemInfo)
 
@@ -118,6 +120,7 @@ function Things.update()
     EJ_SelectInstance(instanceID)
 end
 
+-- CORE
 function Things:ShouldUpdate()
     if not EncounterJournal or not EncounterJournal.instanceID then
         return
@@ -130,4 +133,63 @@ function Things:ShouldUpdate()
     end
 
     self:UpdateUI()
+end
+
+function Things:PruneMog(sourceID)
+    local itemInfo = C_TransmogCollection.GetAppearanceSourceInfo(sourceID)
+
+    if not itemInfo.itemAppearanceID then
+        return
+    end
+
+    local pruned = false
+    for bossName, things in pairs(self.missingThings or {}) do
+        for i = #things, 1, -1 do
+            local thing = things[i]
+
+            if thing.appearanceID == itemInfo.itemAppearanceID then
+                table.remove(things, i)
+                pruned = true
+            end
+        end
+
+        if #things == 0 then
+            self.missingThings[bossName] = nil
+        end
+    end
+
+    if pruned then
+        self:UpdateUI()
+    end
+end
+
+function Things:PruneMount(mountID)
+    local pruned = false
+    for bossName, things in pairs(self.missingThings or {}) do
+        for i = #things, 1, -1 do
+            local thing = things[i]
+
+            if thing.mountID == mountID then
+                table.remove(things, i)
+                pruned = true
+            end
+        end
+
+        if #things == 0 then
+            self.missingThings[bossName] = nil
+        end
+    end
+
+    for instance, mounts in pairs(ThingsDB.mounts or {}) do
+        for link, mount in pairs(mounts) do
+            if mount.mountID == mountID then
+                mount.hasMount = true
+                pruned = true
+            end
+        end
+    end
+
+    if pruned then
+        self:UpdateUI()
+    end
 end
