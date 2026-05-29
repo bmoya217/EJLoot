@@ -69,7 +69,17 @@ function EJLoot:GetRow()
         end)
 
         row:SetScript("OnClick", function(rowSelf)
-            if rowSelf.link and IsModifiedClick("CHATLINK") then
+            if not rowSelf.link then
+                return
+            end
+
+            if IsModifiedClick("DRESSUP") then
+                if rowSelf.mountID then
+                    DressUpMount(rowSelf.mountID)
+                elseif rowSelf.link then
+                    DressUpItemLink(rowSelf.link)
+                end
+            elseif IsModifiedClick("CHATLINK") and rowSelf.link then
                 ChatEdit_InsertLink(rowSelf.link)
             end
         end)
@@ -109,18 +119,19 @@ function EJLoot:AddSubHeader(text, y)
     return y - 34
 end
 
-function EJLoot:AddLink(link, status, y)
+function EJLoot:AddLink(item, status, y)
     local row = self:GetRow()
     row:ClearAllPoints()
     row:SetPoint("TOPLEFT", self.content, "TOPLEFT", self.LINK_LEFT_OFFSET, y)
     row:SetSize(self.LINK_ROW_WIDTH, 20)
-    row.link = link
+    row.link = item.link
+    row.mountID = item.mountID
     row.text:SetFontObject("GameFontHighlight")
 
     if status and status ~= "" then
-        row.text:SetText(link .. " " .. status)
+        row.text:SetText(row.link .. " " .. status)
     else
-        row.text:SetText(link)
+        row.text:SetText(row.link)
     end
 
     row:Show()
@@ -148,7 +159,7 @@ function EJLoot:RenderLoot()
                         addedBoss = true
                     end
 
-                    y = self:AddLink(item.link, nil, y)
+                    y = self:AddLink(item, nil, y)
                     hasAny = true
                 end
             end
@@ -177,14 +188,14 @@ function EJLoot:RenderMounts()
     for instance, mounts in pairs(EJLootDB.mounts or {}) do
         local addedInstance = false
 
-        for link, mount in pairs(mounts) do
+        for _, mount in pairs(mounts) do
             if not mount.hasMount then
                 if not addedInstance then
                     y = self:AddHeader(instance, y)
                     addedInstance = true
                 end
 
-                y = self:AddLink(link, self:GetMountStatus(mount, instance), y)
+                y = self:AddLink(mount, self:GetMountStatus(mount, instance), y)
                 hasAny = true
             end
         end

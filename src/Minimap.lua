@@ -108,7 +108,3 @@ function EJLoot:CreateMinimapButton()
     self.minimapButton = button
     updatePosition()
 end
-
-C_Timer.After(1, function()
-    EJLoot:CreateMinimapButton()
-end)
