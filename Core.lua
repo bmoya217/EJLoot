@@ -24,6 +24,11 @@ function EJLoot:HandleEvent(event, ...)
     if event == "ADDON_LOADED" then
         local addon = ...
         if addon == addonName then
+            self:CreateMinimapButton()
+            if not self:IsFrameAnchoredSetting() then
+                self:UpdateUI()
+            end
+        elseif addon == "Blizzard_EncounterJournal" then
             self:UpdateUI()
         end
     elseif event == "TRANSMOG_COLLECTION_SOURCE_ADDED" then

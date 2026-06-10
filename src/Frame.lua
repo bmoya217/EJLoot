@@ -10,18 +10,6 @@ function EJLoot:ShouldRenderMounts()
                (EncounterJournalInstanceSelect and EncounterJournalInstanceSelect:IsShown())
 end
 
-function EJLoot:ShouldShowFrame()
-    if not self:IsFrameShownSetting() then
-        return false
-    end
-
-    if self:IsFrameAnchoredSetting() then
-        return self:IsEncounterJournalOpen()
-    end
-
-    return true
-end
-
 -- utility helpers
 function EJLoot:ApplyFramePosition()
     if not self.frame then
@@ -147,11 +135,6 @@ function EJLoot:CreateUI()
 end
 
 function EJLoot:ShowUI()
-    if not self:ShouldShowFrame() then
-        self:HideUI()
-        return
-    end
-
     self:CreateUI()
     self.frame:Show()
 end
@@ -163,7 +146,7 @@ function EJLoot:HideUI()
 end
 
 function EJLoot:UpdateUI()
-    if self:ShouldShowFrame() then
+    if self:IsFrameShownSetting() then
         self:ShowUI()
     else
         self:HideUI()
