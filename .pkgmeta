@@ -1,4 +1,4 @@
-package-as: EJ_Loot
+package-as: EJLoot
 
 ignore:
   - .git
