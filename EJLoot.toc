@@ -1,4 +1,4 @@
-## Interface: 120005
+## Interface: 120007
 ## Title: EJ Loot
 ## Notes: Displays missing loot and mounts from the Encounter Journal.
 ## Author: tremens

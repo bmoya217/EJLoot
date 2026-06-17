@@ -5,7 +5,6 @@ EJLoot.fingerprint = ""
 
 local EVENTS = {"ADDON_LOADED", -- init
 "UPDATE_INSTANCE_INFO", "EJ_DIFFICULTY_UPDATE", "GLOBAL_MOUSE_UP", -- affects fingerprint (maybe)
-"EJ_LOOT_DATA_RECIEVED", -- debounce delay for other fingerprint events
 "TRANSMOG_COLLECTION_SOURCE_ADDED", "NEW_MOUNT_ADDED" -- manual prune
 }
 
