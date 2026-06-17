@@ -2,7 +2,7 @@
 ## Title: EJ Loot
 ## Notes: Displays missing loot and mounts from the Encounter Journal.
 ## Author: tremens
-## Version: 0.1.0
+## Version: 0.1.1
 ## SavedVariables: EJLootDB
 
 src/Constants.lua
