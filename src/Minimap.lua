@@ -23,10 +23,7 @@ function EJLoot:CreateMinimapButton()
         return
     end
 
-    EJLootDB = EJLootDB or {}
-    EJLootDB.minimap = EJLootDB.minimap or {
-        angle = 225
-    }
+    local minimapSettings = self:GetMinimapSettings()
 
     local button = CreateFrame("Button", "EJLootMinimapButton", Minimap)
     button:SetSize(31, 31)
@@ -59,7 +56,7 @@ function EJLoot:CreateMinimapButton()
     border:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
 
     local function updatePosition()
-        local angle = math.rad(EJLootDB.minimap.angle or 225)
+        local angle = math.rad(minimapSettings.angle or 225)
         local radius = 100
         local x = math.cos(angle) * radius
         local y = math.sin(angle) * radius
@@ -95,7 +92,7 @@ function EJLoot:CreateMinimapButton()
             px = px / scale
             py = py / scale
 
-            EJLootDB.minimap.angle = math.deg(math.atan2(py - my, px - mx))
+            minimapSettings.angle = math.deg(math.atan2(py - my, px - mx))
             updatePosition()
         end)
     end)
@@ -107,4 +104,5 @@ function EJLoot:CreateMinimapButton()
 
     self.minimapButton = button
     updatePosition()
+    self:SetMinimapButtonShown(not minimapSettings.hide)
 end

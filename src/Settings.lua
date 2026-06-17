@@ -14,11 +14,22 @@ function EJLoot:GetSettings()
     EJLootDB = EJLootDB or {}
     EJLootDB.settings = EJLootDB.settings or {}
     EJLootDB.mounts = EJLootDB.mounts or {}
+    EJLootDB.minimap = EJLootDB.minimap or {}
 
     EJLootDB.settings.display = EJLootDB.settings.display or DISPLAY.SHOW
     EJLootDB.settings.positionMode = EJLootDB.settings.positionMode or POSITION.ENCOUNTER_JOURNAL
+    EJLootDB.minimap.angle = EJLootDB.minimap.angle or 225
+
+    if EJLootDB.minimap.hide == nil then
+        EJLootDB.minimap.hide = false
+    end
 
     return EJLootDB.settings
+end
+
+function EJLoot:GetMinimapSettings()
+    self:GetSettings()
+    return EJLootDB.minimap
 end
 
 function EJLoot:IsFrameAnchoredSetting()
@@ -27,6 +38,10 @@ end
 
 function EJLoot:IsFrameShownSetting()
     return self:GetSettings().display == DISPLAY.SHOW
+end
+
+function EJLoot:IsMinimapButtonShownSetting()
+    return not self:GetMinimapSettings().hide
 end
 
 function EJLoot:SetFrameDisplay(display)
@@ -39,12 +54,29 @@ function EJLoot:SetFrameDisplay(display)
     end
 end
 
+function EJLoot:SetMinimapButtonShown(shown)
+    self:GetMinimapSettings().hide = not shown
+
+    if self.minimapButton then
+        if shown then
+            self.minimapButton:Show()
+        else
+            self.minimapButton:Hide()
+            GameTooltip:Hide()
+        end
+    end
+end
+
 function EJLoot:ToggleFrameDisplay()
     if self:IsFrameShownSetting() then
         self:SetFrameDisplay(DISPLAY.HIDE)
     else
         self:SetFrameDisplay(DISPLAY.SHOW)
     end
+end
+
+function EJLoot:ToggleMinimapButton()
+    self:SetMinimapButtonShown(not self:IsMinimapButtonShownSetting())
 end
 
 function EJLoot:TogglePositionMode()
