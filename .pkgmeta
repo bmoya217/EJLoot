@@ -2,7 +2,7 @@ package-as: EJLoot
 
 externals:
   Libs/LibDBIcon-1.0: https://repos.wowace.com/wow/libdbicon-1-0/trunk
-  Libs/LibUIDropDownMenu: https://repos.curseforge.com/wow/libuidropdownmenu/trunk
+  Libs/LibUIDropDownMenu: https://repos.curseforge.com/wow/libuidropdownmenu/trunk/LibUIDropDownMenu
 
 ignore:
   - .git
