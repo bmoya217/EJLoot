@@ -18,7 +18,8 @@ function EJLoot:GetSettings()
 
     EJLootDB.settings.display = EJLootDB.settings.display or DISPLAY.SHOW
     EJLootDB.settings.positionMode = EJLootDB.settings.positionMode or POSITION.ENCOUNTER_JOURNAL
-    EJLootDB.minimap.angle = EJLootDB.minimap.angle or 225
+
+    EJLootDB.minimap.minimapPos = EJLootDB.minimap.minimapPos or 225
 
     if EJLootDB.minimap.hide == nil then
         EJLootDB.minimap.hide = false
@@ -57,11 +58,11 @@ end
 function EJLoot:SetMinimapButtonShown(shown)
     self:GetMinimapSettings().hide = not shown
 
-    if self.minimapButton then
+    if self.minimapIconLib then
         if shown then
-            self.minimapButton:Show()
+            self.minimapIconLib:Show(addonName)
         else
-            self.minimapButton:Hide()
+            self.minimapIconLib:Hide(addonName)
             GameTooltip:Hide()
         end
     end
