@@ -1,10 +1,8 @@
 package-as: EJLoot
 
 externals:
-  Libs/LibStub: https://repos.wowace.com/wow/libstub/trunk
-  Libs/CallbackHandler-1.0: https://repos.wowace.com/wow/callbackhandler/trunk/CallbackHandler-1.0
-  Libs/LibDataBroker-1.1: https://repos.wowace.com/wow/libdatabroker-1-1
-  Libs/LibDBIcon-1.0: https://repos.wowace.com/wow/libdbicon-1-0
+  Libs/LibDBIcon-1.0: https://repos.wowace.com/wow/libdbicon-1-0/trunk
+  Libs/LibUIDropDownMenu: https://repos.curseforge.com/wow/libuidropdownmenu/trunk
 
 ignore:
   - .git
