@@ -1,7 +1,6 @@
 local addonName, EJLoot = ...
 
 EJLootDB = EJLootDB or {}
-EJLootDB.mounts = EJLootDB.mounts or {}
 EJLootDB.collectibles = EJLootDB.collectibles or {}
 EJLoot.missingItems = EJLoot.missingItems or {}
 EJLoot.bosses = EJLoot.bosses or {}

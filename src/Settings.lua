@@ -13,22 +13,8 @@ local POSITION = {
 function EJLoot:GetSettings()
     EJLootDB = EJLootDB or {}
     EJLootDB.settings = EJLootDB.settings or {}
-    EJLootDB.mounts = EJLootDB.mounts or {}
     EJLootDB.collectibles = EJLootDB.collectibles or {}
     EJLootDB.minimap = EJLootDB.minimap or {}
-
-    -- Preserve mount discoveries made by versions that predate the typed cache.
-    for instance, mounts in pairs(EJLootDB.mounts) do
-        EJLootDB.collectibles[instance] = EJLootDB.collectibles[instance] or {}
-        for _, mount in pairs(mounts) do
-            if mount.itemID then
-                mount.type = "mount"
-                local key = "mount:" .. tostring(mount.itemID)
-                EJLootDB.collectibles[instance][key] = EJLootDB.collectibles[instance][key] or mount
-            end
-        end
-    end
-
     EJLootDB.settings.display = EJLootDB.settings.display or DISPLAY.SHOW
     EJLootDB.settings.positionMode = EJLootDB.settings.positionMode or POSITION.ENCOUNTER_JOURNAL
     EJLootDB.settings.noInstanceTypes = EJLootDB.settings.noInstanceTypes or {}
