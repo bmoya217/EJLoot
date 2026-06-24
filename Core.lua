@@ -5,8 +5,8 @@ EJLoot.fingerprint = ""
 
 local EVENTS = {"ADDON_LOADED", -- init
 "UPDATE_INSTANCE_INFO", "EJ_DIFFICULTY_UPDATE", "GLOBAL_MOUSE_UP", -- affects fingerprint (maybe)
-"TRANSMOG_COLLECTION_SOURCE_ADDED", "NEW_MOUNT_ADDED" -- manual prune
-}
+"TRANSMOG_COLLECTION_SOURCE_ADDED", "NEW_MOUNT_ADDED", -- collection updates
+"NEW_TOY_ADDED", "NEW_PET_ADDED"}
 
 function EJLoot:Debounce()
     if self.timer and self.timer ~= 0 then
@@ -30,12 +30,9 @@ function EJLoot:HandleEvent(event, ...)
         elseif addon == "Blizzard_EncounterJournal" then
             self:UpdateUI()
         end
-    elseif event == "TRANSMOG_COLLECTION_SOURCE_ADDED" then
-        local sourceID = ...
-        self:PruneMog(sourceID)
-    elseif event == "NEW_MOUNT_ADDED" then
-        local mountID = ...
-        self:PruneMount(mountID)
+    elseif event == "TRANSMOG_COLLECTION_SOURCE_ADDED" or event == "NEW_MOUNT_ADDED" or event == "NEW_TOY_ADDED" or
+        event == "NEW_PET_ADDED" then
+        self:PruneCollectedItem(event, ...)
     else
         self:Debounce()
     end

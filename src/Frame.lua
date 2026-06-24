@@ -5,7 +5,15 @@ function EJLoot:IsEncounterJournalOpen()
     return EncounterJournal and EncounterJournal:IsShown()
 end
 
-function EJLoot:ShouldRenderMounts()
+function EJLoot:ShouldShowUI()
+    if not self:IsFrameShownSetting() then
+        return false
+    end
+
+    return not self:IsFrameAnchoredSetting() or EncounterJournal ~= nil
+end
+
+function EJLoot:ShouldRenderCollectibles()
     return not EncounterJournal or not EncounterJournal.instanceID or
                (EncounterJournalInstanceSelect and EncounterJournalInstanceSelect:IsShown())
 end
@@ -16,9 +24,13 @@ function EJLoot:ApplyFramePosition()
         return
     end
 
+    if self:IsFrameAnchoredSetting() and not EncounterJournal then
+        return
+    end
+
     self.frame:ClearAllPoints()
 
-    if self:IsFrameAnchoredSetting() and EncounterJournal then
+    if self:IsFrameAnchoredSetting() then
         local offset = EncounterJournal.instanceID and 40 or 8
         self.frame:SetParent(EncounterJournal)
         self.frame:SetPoint("TOPLEFT", EncounterJournal, "TOPRIGHT", offset, 0)
@@ -146,7 +158,7 @@ function EJLoot:HideUI()
 end
 
 function EJLoot:UpdateUI()
-    if self:IsFrameShownSetting() then
+    if self:ShouldShowUI() then
         self:ShowUI()
     else
         self:HideUI()
@@ -157,8 +169,8 @@ function EJLoot:UpdateUI()
     end
 
     self:UpdateHeaderHint()
-    if self:ShouldRenderMounts() then
-        self:RenderMounts()
+    if self:ShouldRenderCollectibles() then
+        self:RenderCollectibles()
     else
         self:RenderLoot()
     end

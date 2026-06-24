@@ -25,8 +25,7 @@ end
 
 function EJLoot:ToggleMinimapMenu(anchor)
     local dropdown = self.minimapDropdown
-    local dropdownMenu = L_EasyMenu
-    local dropdownTemplate = "L_UIDropDownMenuTemplate"
+    local dropdownMenu = LibStub and LibStub("LibUIDropDownMenu-4.0", true)
 
     if not dropdownMenu then
         self:PrintMessage("Dropdown menu library is missing.")
@@ -34,12 +33,30 @@ function EJLoot:ToggleMinimapMenu(anchor)
     end
 
     if not dropdown then
-        dropdown = CreateFrame("Frame", "EJLootMinimapDropdown", UIParent, dropdownTemplate)
+        dropdown = dropdownMenu:Create_UIDropDownMenu("EJLootMinimapDropdown", UIParent)
         self.minimapDropdown = dropdown
     end
 
     local frameDisplay = self:IsFrameShownSetting() and "Hide frame" or "Show frame"
     local positionDisplay = self:IsFrameAnchoredSetting() and "Move to screen" or "Anchor to Adventure Guide"
+    local collectibleTypes = {
+        {key = "mount", label = "Mounts"},
+        {key = "toy", label = "Toys"},
+        {key = "pet", label = "Pets"}
+    }
+    local noInstanceMenu = {}
+    for _, collectibleType in ipairs(collectibleTypes) do
+        local key = collectibleType.key
+        table.insert(noInstanceMenu, {
+            text = collectibleType.label,
+            checked = EJLoot:IsNoInstanceTypeShown(key),
+            isNotRadio = true,
+            keepShownOnClick = true,
+            func = function()
+                EJLoot:SetNoInstanceTypeShown(key, not EJLoot:IsNoInstanceTypeShown(key))
+            end
+        })
+    end
     local menu = {
         {
             text = "EJ Loot",
@@ -61,6 +78,12 @@ function EJLoot:ToggleMinimapMenu(anchor)
             end
         },
         {
+            text = "No instance view",
+            hasArrow = true,
+            notCheckable = true,
+            menuList = noInstanceMenu
+        },
+        {
             text = "",
             disabled = true,
             notCheckable = true
@@ -75,7 +98,7 @@ function EJLoot:ToggleMinimapMenu(anchor)
     }
 
     GameTooltip:Hide()
-    dropdownMenu(menu, dropdown, anchor or self.minimapButton or "cursor", 0, 0, "MENU")
+    dropdownMenu:EasyMenu(menu, dropdown, anchor or self.minimapButton or "cursor", 0, 0, "MENU")
 end
 
 function EJLoot:CreateMinimapButton()

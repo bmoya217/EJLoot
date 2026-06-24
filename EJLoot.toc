@@ -1,8 +1,8 @@
 ## Interface: 120007
 ## Title: EJ Loot
-## Notes: Displays missing loot and mounts from the Encounter Journal.
+## Notes: Displays missing loot and collectibles from the Encounter Journal.
 ## Author: tremens
-## Version: 0.1.3
+## Version: 0.2.0
 ## SavedVariables: EJLootDB
 
 Libs/LibDBIcon-1.0/embeds.xml

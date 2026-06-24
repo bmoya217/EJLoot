@@ -177,25 +177,26 @@ function EJLoot:RenderLoot()
     self.content:SetHeight(math.abs(y) + 20)
 end
 
-function EJLoot:RenderMounts()
+function EJLoot:RenderCollectibles()
     self:ClearRows()
-    self.frame.title:SetText("EJ Mounts")
+    self.frame.title:SetText("EJ Collectibles")
     self:AddSubHeader("Select EJ instance to view items.", 12)
 
     local y = -8
     local hasAny = false
 
-    for instance, mounts in pairs(EJLootDB.mounts or {}) do
+    for instance, collectibles in pairs(EJLootDB.collectibles or {}) do
         local addedInstance = false
 
-        for _, mount in pairs(mounts) do
-            if not mount.hasMount then
+        for _, collectible in pairs(collectibles) do
+            if self:IsNoInstanceTypeShown(collectible.type) and not self:IsCollectibleCollected(collectible) then
                 if not addedInstance then
                     y = self:AddHeader(instance, y)
                     addedInstance = true
                 end
 
-                y = self:AddLink(mount, self:GetMountStatus(mount, instance), y)
+                local status = collectible.type == "mount" and self:GetMountStatus(collectible, instance) or nil
+                y = self:AddLink(collectible, status, y)
                 hasAny = true
             end
         end
@@ -206,7 +207,7 @@ function EJLoot:RenderMounts()
     end
 
     if not hasAny then
-        y = self:AddHeader("Has all the mounts!", y)
+        y = self:AddHeader("No missing collectibles to show!", y)
     end
 
     self.content:SetHeight(math.abs(y) + 20)
