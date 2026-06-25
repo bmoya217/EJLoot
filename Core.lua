@@ -23,6 +23,9 @@ function EJLoot:HandleEvent(event, ...)
     if event == "ADDON_LOADED" then
         local addon = ...
         if addon == addonName then
+            self:GetSettings()
+            self:PruneCollectedCollectibles()
+            self:CreateOptionsPanel()
             self:CreateMinimapButton()
             if not self:IsFrameAnchoredSetting() then
                 self:UpdateUI()

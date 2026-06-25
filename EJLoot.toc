@@ -15,6 +15,7 @@ src/Logic.lua
 src/Frame.lua
 src/Render.lua
 src/Minimap.lua
+src/Options.lua
 src/SlashCommands.lua
 
 Core.lua

@@ -1,1 +1,3 @@
-track pets and toys
+create addon options
+- same minimap dropdown functionality
+- manually hide seen collectibles from being tracked

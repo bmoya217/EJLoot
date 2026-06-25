@@ -5,25 +5,51 @@ EJLootDB.collectibles = EJLootDB.collectibles or {}
 EJLoot.missingItems = EJLoot.missingItems or {}
 EJLoot.bosses = EJLoot.bosses or {}
 
-local COLLECTED_ID_FIELDS = {
-    NEW_MOUNT_ADDED = "mountID",
-    NEW_TOY_ADDED = "itemID",
-    NEW_PET_ADDED = "speciesID"
-}
-
 function EJLoot:TrackItem(bossName, item)
     self.missingItems[bossName] = self.missingItems[bossName] or {}
     table.insert(self.missingItems[bossName], item)
 end
 
 function EJLoot:TrackCollectible(instance, collectible)
-    EJLootDB.collectibles[instance] = EJLootDB.collectibles[instance] or {}
-    local key = collectible.type .. ":" .. tostring(collectible.itemID)
-    local previous = EJLootDB.collectibles[instance][key] or {}
+    local key = self:GetCollectibleKey(collectible)
+
+    if not key then
+        return
+    end
+
+    local index, previous = self:FindCollectibleIndex(collectible)
+    previous = previous or {}
+
     collectible.encounters = previous.encounters or {}
     collectible.encounters[collectible.difficulty] = collectible.encounter
+    collectible.hidden = previous.hidden or nil
+    collectible.instance = instance
 
-    EJLootDB.collectibles[instance][key] = collectible
+    if index then
+        EJLootDB.collectibles[index] = collectible
+    else
+        table.insert(EJLootDB.collectibles, collectible)
+    end
+end
+
+function EJLoot:RemoveCollectible(collectible)
+    local index = self:FindCollectibleIndex(collectible)
+
+    if not index then
+        return false
+    end
+
+    table.remove(EJLootDB.collectibles, index)
+    return true
+end
+
+function EJLoot:GetPetSpeciesIDByItemID(itemID)
+    if not C_PetJournal or not C_PetJournal.GetPetInfoByItemID then
+        return
+    end
+
+    local _, _, _, _, _, _, _, _, _, _, _, _, speciesID = C_PetJournal.GetPetInfoByItemID(itemID)
+    return speciesID
 end
 
 function EJLoot:GetCollectibleInfo(itemInfo)
@@ -31,31 +57,34 @@ function EJLoot:GetCollectibleInfo(itemInfo)
         return
     end
 
-    local mountID = C_MountJournal.GetMountFromItem(itemInfo.itemID)
-    if mountID then
-        local _, spellID = C_MountJournal.GetMountInfoByID(mountID)
-        return "mount", mountID, C_MountJournal.GetMountLink(spellID)
+    local collectibleID = C_MountJournal.GetMountFromItem(itemInfo.itemID)
+    if collectibleID then
+        local _, spellID = C_MountJournal.GetMountInfoByID(collectibleID)
+        return "mount", collectibleID, C_MountJournal.GetMountLink(spellID)
     end
 
     if C_ToyBox and C_ToyBox.GetToyInfo and C_ToyBox.GetToyInfo(itemInfo.itemID) then
         return "toy", itemInfo.itemID, itemInfo.link
     end
 
-    local speciesID = C_PetJournal and C_PetJournal.GetPetInfoByItemID and
-                          C_PetJournal.GetPetInfoByItemID(itemInfo.itemID)
-    if speciesID then
-        return "pet", speciesID, itemInfo.link
+    collectibleID = self:GetPetSpeciesIDByItemID(itemInfo.itemID)
+    if collectibleID then
+        return "pet", collectibleID, itemInfo.link
     end
 end
 
 function EJLoot:IsCollectibleCollected(collectible)
+    if not collectible or not collectible.collectibleID then
+        return false
+    end
+
     if collectible.type == "mount" then
-        local _, _, _, _, _, _, _, _, _, _, collected = C_MountJournal.GetMountInfoByID(collectible.mountID)
+        local _, _, _, _, _, _, _, _, _, _, collected = C_MountJournal.GetMountInfoByID(collectible.collectibleID)
         return collected
     elseif collectible.type == "toy" then
-        return PlayerHasToy(collectible.itemID)
+        return PlayerHasToy(collectible.collectibleID)
     elseif collectible.type == "pet" then
-        local collected = C_PetJournal.GetNumCollectedInfo(collectible.speciesID)
+        local collected = C_PetJournal.GetNumCollectedInfo(collectible.collectibleID)
         return collected and collected > 0
     end
 
@@ -72,6 +101,19 @@ function EJLoot:IsAppearanceCollected(appearanceID)
     end
 
     return false
+end
+
+function EJLoot:PruneCollectedCollectibles()
+    local pruned = false
+
+    for index = #(EJLootDB.collectibles or {}), 1, -1 do
+        if self:IsCollectibleCollected(EJLootDB.collectibles[index]) then
+            table.remove(EJLootDB.collectibles, index)
+            pruned = true
+        end
+    end
+
+    return pruned
 end
 
 function EJLoot.getFingerprint()
@@ -100,7 +142,8 @@ function EJLoot:ScanEncounter(encounterID, bossName)
             local appearanceID = C_TransmogCollection.GetItemInfo(itemInfo.link)
 
             if appearanceID then
-                itemInfo.appearanceID = appearanceID
+                itemInfo.type = "appearance"
+                itemInfo.collectibleID = appearanceID
                 if not self:IsAppearanceCollected(appearanceID) then
                     self:TrackItem(bossName, itemInfo)
                 end
@@ -112,17 +155,14 @@ function EJLoot:ScanEncounter(encounterID, bossName)
         if collectibleType then
             itemInfo.link = collectibleLink or itemInfo.link
             itemInfo.type = collectibleType
+            itemInfo.collectibleID = collectibleID
             itemInfo.difficulty = EJ_GetDifficulty()
             itemInfo.encounter = bossName
-            if collectibleType == "mount" then
-                itemInfo.mountID = collectibleID
-            elseif collectibleType == "pet" then
-                itemInfo.speciesID = collectibleID
-            end
 
-            self:TrackCollectible(EJ_GetInstanceInfo(), itemInfo)
-
-            if not self:IsCollectibleCollected(itemInfo) then
+            if self:IsCollectibleCollected(itemInfo) then
+                self:RemoveCollectible(itemInfo)
+            else
+                self:TrackCollectible(EJ_GetInstanceInfo(), itemInfo)
                 self:TrackItem(bossName, itemInfo)
             end
         end
@@ -179,15 +219,21 @@ function EJLoot:ShouldScan()
 end
 
 function EJLoot:PruneCollectedItem(event, collectedID)
-    local field = COLLECTED_ID_FIELDS[event]
+    local collectedType
 
     if event == "TRANSMOG_COLLECTION_SOURCE_ADDED" then
         local sourceInfo = C_TransmogCollection.GetAppearanceSourceInfo(collectedID)
-        field = "appearanceID"
+        collectedType = "appearance"
         collectedID = sourceInfo and sourceInfo.itemAppearanceID
+    elseif event == "NEW_MOUNT_ADDED" then
+        collectedType = "mount"
+    elseif event == "NEW_TOY_ADDED" then
+        collectedType = "toy"
+    elseif event == "NEW_PET_ADDED" then
+        collectedType = "pet"
     end
 
-    if not field or not collectedID then
+    if not collectedType or not collectedID then
         return
     end
 
@@ -195,7 +241,7 @@ function EJLoot:PruneCollectedItem(event, collectedID)
 
     for bossName, items in pairs(self.missingItems or {}) do
         for i = #items, 1, -1 do
-            if items[i][field] == collectedID then
+            if items[i].type == collectedType and items[i].collectibleID == collectedID then
                 table.remove(items, i)
                 pruned = true
             end
@@ -206,7 +252,18 @@ function EJLoot:PruneCollectedItem(event, collectedID)
         end
     end
 
+    for index = #(EJLootDB.collectibles or {}), 1, -1 do
+        if EJLootDB.collectibles[index].type == collectedType and EJLootDB.collectibles[index].collectibleID == collectedID then
+            table.remove(EJLootDB.collectibles, index)
+            pruned = true
+        end
+    end
+
     if pruned or self:ShouldRenderCollectibles() then
         self:UpdateUI()
+    end
+
+    if pruned and self.RefreshOptionsPanel then
+        self:RefreshOptionsPanel()
     end
 end

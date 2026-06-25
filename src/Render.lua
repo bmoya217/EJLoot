@@ -3,26 +3,102 @@ local addonName, EJLoot = ...
 local DIFFICULTIES = {"N", "H", "N10", "N25", "H10", "H25", "LFR", "M+", "N40", "", "HS", "NS", "", "N", "H", "M", "",
                       "", "", "", "", "", "M"}
 
-function EJLoot:GetMountStatus(mount, instanceName)
+local function getDifficultyName(difficultyID)
+    if GetDifficultyInfo then
+        local name = GetDifficultyInfo(difficultyID)
+        if name and name ~= "" then
+            return name
+        end
+    end
+
+    return tostring(difficultyID)
+end
+
+local function getDifficultyLabelFromName(name)
+    name = name or ""
+    local lowerName = name:lower()
+
+    local size, mode = name:match("^(%d+)%s+Player%s+(.+)$")
+    if size and mode then
+        return mode:sub(1, 1) .. size
+    end
+
+    size, mode = name:match("^(%d+)%s+player%s+(.+)$")
+    if size and mode then
+        return mode:sub(1, 1) .. size
+    end
+
+    if lowerName:find("raid finder", 1, true) or lowerName:find("looking for raid", 1, true) then
+        return "LFR"
+    elseif lowerName:find("keystone", 1, true) or lowerName:find("mythic+", 1, true) then
+        return "M+"
+    elseif lowerName:find("mythic", 1, true) then
+        return "M"
+    elseif lowerName:find("heroic", 1, true) then
+        return "H"
+    elseif lowerName:find("normal", 1, true) then
+        return "N"
+    end
+
+    return name
+end
+
+local function getDifficultyLabel(difficultyID)
+    local label = DIFFICULTIES[difficultyID]
+    if label and label ~= "" then
+        return label
+    end
+
+    return getDifficultyLabelFromName(getDifficultyName(difficultyID))
+end
+
+local function isDifficultyLocked(instanceName, difficultyID)
+    local difficultyName = getDifficultyName(difficultyID)
+    local difficultyLabel = getDifficultyLabelFromName(difficultyName)
+
+    for instanceIndex = 1, GetNumSavedInstances() do
+        local instance, _, _, savedDifficultyID, locked, _, _, _, _, savedDifficultyName = GetSavedInstanceInfo(instanceIndex)
+
+        if instance == instanceName and locked and
+            (savedDifficultyID == difficultyID or savedDifficultyName == difficultyName or
+                getDifficultyLabelFromName(savedDifficultyName) == difficultyLabel) then
+            return true
+        end
+    end
+
+    return false
+end
+
+function EJLoot:GetInstanceStatus(instanceName, collectibles)
+    local difficulties = {}
     local status = {}
 
-    for difficultyID, shorthand in ipairs(DIFFICULTIES) do
-        local encounter = mount.encounters and mount.encounters[difficultyID]
-
-        if encounter then
-            local color = "|cff00FF00"
-
-            for instanceIndex = 1, GetNumSavedInstances() do
-                local instance, _, _, savedDifficultyID, locked = GetSavedInstanceInfo(instanceIndex)
-
-                if instance == instanceName and savedDifficultyID == difficultyID and locked then
-                    color = "|cffA8A8A8"
-                    break
-                end
-            end
-
-            table.insert(status, color .. shorthand .. "|r")
+    for _, collectible in ipairs(collectibles or {}) do
+        for difficultyID in pairs(collectible.encounters or {}) do
+            difficulties[difficultyID] = true
         end
+    end
+
+    for difficultyID in pairs(difficulties) do
+        local normalizedDifficultyID = tonumber(difficultyID) or difficultyID
+        local color = "|cff00FF00"
+
+        if isDifficultyLocked(instanceName, normalizedDifficultyID) then
+            color = "|cffA8A8A8"
+        end
+
+        table.insert(status, {
+            difficultyID = normalizedDifficultyID,
+            text = color .. getDifficultyLabel(normalizedDifficultyID) .. "|r"
+        })
+    end
+
+    table.sort(status, function(a, b)
+        return (tonumber(a.difficultyID) or 0) < (tonumber(b.difficultyID) or 0)
+    end)
+
+    for index, difficulty in ipairs(status) do
+        status[index] = difficulty.text
     end
 
     return table.concat(status, " | ")
@@ -74,8 +150,8 @@ function EJLoot:GetRow()
             end
 
             if IsModifiedClick("DRESSUP") then
-                if rowSelf.mountID then
-                    DressUpMount(rowSelf.mountID)
+                if rowSelf.collectibleType == "mount" and rowSelf.collectibleID then
+                    DressUpMount(rowSelf.collectibleID)
                 elseif rowSelf.link then
                     DressUpItemLink(rowSelf.link)
                 end
@@ -119,20 +195,17 @@ function EJLoot:AddSubHeader(text, y)
     return y - 34
 end
 
-function EJLoot:AddLink(item, status, y)
+function EJLoot:AddLink(item, y)
     local row = self:GetRow()
     row:ClearAllPoints()
     row:SetPoint("TOPLEFT", self.content, "TOPLEFT", self.LINK_LEFT_OFFSET, y)
     row:SetSize(self.LINK_ROW_WIDTH, 20)
     row.link = item.link
-    row.mountID = item.mountID
+    row.collectibleType = item.type
+    row.collectibleID = item.collectibleID
     row.text:SetFontObject("GameFontHighlight")
 
-    if status and status ~= "" then
-        row.text:SetText(row.link .. " " .. status)
-    else
-        row.text:SetText(row.link)
-    end
+    row.text:SetText(row.link)
 
     row:Show()
 
@@ -153,13 +226,13 @@ function EJLoot:RenderLoot()
             local addedBoss = false
 
             for _, item in ipairs(items) do
-                if item.link then
+                if item.link and (not item.type or self:IsCollectibleShown(item)) then
                     if not addedBoss then
                         y = self:AddHeader(bossName, y)
                         addedBoss = true
                     end
 
-                    y = self:AddLink(item, nil, y)
+                    y = self:AddLink(item, y)
                     hasAny = true
                 end
             end
@@ -184,24 +257,35 @@ function EJLoot:RenderCollectibles()
 
     local y = -8
     local hasAny = false
+    local instances = {}
+    local groups = {}
 
-    for instance, collectibles in pairs(EJLootDB.collectibles or {}) do
-        local addedInstance = false
+    for _, collectible in ipairs(EJLootDB.collectibles or {}) do
+        if self:IsCollectibleTypeShown(collectible.type) and self:IsCollectibleShown(collectible) then
+            local instance = collectible.instance or "Unknown instance"
 
-        for _, collectible in pairs(collectibles) do
-            if self:IsNoInstanceTypeShown(collectible.type) and not self:IsCollectibleCollected(collectible) then
-                if not addedInstance then
-                    y = self:AddHeader(instance, y)
-                    addedInstance = true
-                end
-
-                local status = collectible.type == "mount" and self:GetMountStatus(collectible, instance) or nil
-                y = self:AddLink(collectible, status, y)
-                hasAny = true
+            if not groups[instance] then
+                groups[instance] = {}
+                table.insert(instances, instance)
             end
+
+            table.insert(groups[instance], collectible)
+        end
+    end
+
+    table.sort(instances)
+
+    for _, instance in ipairs(instances) do
+        local status = self:GetInstanceStatus(instance, groups[instance])
+        local header = status ~= "" and (instance .. " " .. status) or instance
+        y = self:AddHeader(header, y)
+
+        for _, collectible in ipairs(groups[instance]) do
+            y = self:AddLink(collectible, y)
+            hasAny = true
         end
 
-        if addedInstance then
+        if #groups[instance] > 0 then
             y = y - 8
         end
     end

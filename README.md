@@ -7,10 +7,11 @@ I made it because I liked knowing what mogs I still needed from legacy raids, bu
 ## Features
 
 - Tracks missing transmog appearances from the current Encounter Journal view.
-- Tracks mount drops and shows lockout status by difficulty.
+- Tracks mount drops and shows instance lockout status by seen Encounter Journal difficulties.
 - Remembers mounts, toys, and pets it has seen and shows the selected types when no Encounter Journal instance is selected.
 - Prunes collected appearances and collectibles from the list as you learn them.
-- Adds a minimap button for quick display controls.
+- Adds a minimap button and AddOns options panel for display controls.
+- Lets you hide individual tracked mounts, pets, and toys you do not want EJ Loot to show anymore.
 - Can display next to the Adventure Guide or as a movable standalone frame.
 
 ## Usage
@@ -20,10 +21,12 @@ Open the Encounter Journal and select an instance or encounter. EJ Loot scans th
 The minimap button controls the frame:
 
 - Left-click: show or hide EJ Loot.
-- Right-click: toggle between Adventure Guide positioning and screen positioning.
+- Right-click: open quick options.
 - Drag: move the minimap button.
 
 When the frame is in screen mode, drag the frame itself to reposition it.
+
+You can also open **Esc -> Options -> AddOns -> EJ Loot** to change display settings, choose which collectible types appear when no instance is selected, and hide specific tracked mounts, pets, or toys.
 
 ## How It Works
 

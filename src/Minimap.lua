@@ -49,11 +49,11 @@ function EJLoot:ToggleMinimapMenu(anchor)
         local key = collectibleType.key
         table.insert(noInstanceMenu, {
             text = collectibleType.label,
-            checked = EJLoot:IsNoInstanceTypeShown(key),
+            checked = EJLoot:IsCollectibleTypeShown(key),
             isNotRadio = true,
             keepShownOnClick = true,
             func = function()
-                EJLoot:SetNoInstanceTypeShown(key, not EJLoot:IsNoInstanceTypeShown(key))
+                EJLoot:SetCollectibleTypeShown(key, not EJLoot:IsCollectibleTypeShown(key))
             end
         })
     end
@@ -82,6 +82,13 @@ function EJLoot:ToggleMinimapMenu(anchor)
             hasArrow = true,
             notCheckable = true,
             menuList = noInstanceMenu
+        },
+        {
+            text = "Open options",
+            notCheckable = true,
+            func = function()
+                EJLoot:OpenOptions()
+            end
         },
         {
             text = "",
