@@ -2,7 +2,7 @@
 ## Title: EJ Loot
 ## Notes: Displays missing loot and collectibles from the Encounter Journal.
 ## Author: tremens
-## Version: 0.2.0
+## Version: 0.3.0
 ## SavedVariables: EJLootDB
 
 Libs/LibDBIcon-1.0/embeds.xml

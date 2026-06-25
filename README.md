@@ -1,46 +1,46 @@
 # EJ Loot
 
-EJ Loot is a lightweight World of Warcraft addon for tracking missing transmog appearances, mounts, toys, and pets from the Encounter Journal.
+EJ Loot is a small World of Warcraft addon for finding missing loot from the Adventure Guide.
 
-I made it because I liked knowing what mogs I still needed from legacy raids, but did not want the load-time cost of a much larger collection tracker. EJ Loot keeps the scope small: it looks at the loot currently available in the Encounter Journal, shows what you are missing, and remembers collectible drops it has seen before.
+It scans the Encounter Journal view you are looking at and lists missing transmog appearances, mounts, toys, and pets in a compact frame. The goal is to answer one narrow question quickly: what can I still collect from this instance?
 
 ## Features
 
-- Tracks missing transmog appearances from the current Encounter Journal view.
-- Tracks mount drops and shows instance lockout status by seen Encounter Journal difficulties.
-- Remembers mounts, toys, and pets it has seen and shows the selected types when no Encounter Journal instance is selected.
-- Prunes collected appearances and collectibles from the list as you learn them.
-- Adds a minimap button and AddOns options panel for display controls.
-- Lets you hide individual tracked mounts, pets, and toys you do not want EJ Loot to show anymore.
-- Can display next to the Adventure Guide or as a movable standalone frame.
+- Shows missing transmog appearances from the current Encounter Journal loot table.
+- Tracks collectible mount, toy, and pet drops discovered while browsing instance loot.
+- Keeps remembered collectibles available even when no instance is selected.
+- Removes collected appearances and collectibles as collection updates are received.
+- Shows instance lockout status for tracked mount drops where available.
+- Supports an Adventure Guide anchored frame or a movable standalone frame.
+- Includes a minimap button, slash commands, and an addon options panel.
+- Lets you hide individual tracked mounts, toys, and pets you no longer want listed.
 
 ## Usage
 
-Open the Encounter Journal and select an instance or encounter. EJ Loot scans the visible loot table and lists missing appearances, mounts, toys, and pets under their bosses.
+Open the Adventure Guide, choose an instance or encounter, and EJ Loot will list the missing items it can see from that Encounter Journal loot table.
 
-The minimap button controls the frame:
+The minimap button provides the quickest controls:
 
-- Left-click: show or hide EJ Loot.
-- Right-click: open quick options.
-- Drag: move the minimap button.
+- Left-click to show or hide the EJ Loot frame.
+- Right-click to open quick options.
+- Drag to move the minimap button.
 
-When the frame is in screen mode, drag the frame itself to reposition it.
+The options panel includes display settings, minimap visibility, which collectible types appear when no instance is selected, and per-item tracking for discovered mounts, toys, and pets.
 
-You can also open **Esc -> Options -> AddOns -> EJ Loot** to change display settings, choose which collectible types appear when no instance is selected, and hide specific tracked mounts, pets, or toys.
-
-## How It Works
-
-EJ Loot only scans loot that the Encounter Journal exposes. When no instance is selected, the addon cannot rescan instance loot, so it displays the enabled types of cached collectibles it has seen before and removes collected items as collection events come in. Choose those types from the minimap button's **No instance view** submenu.
-
-## Installation
-
-Copy this folder into your World of Warcraft addons directory:
+Slash commands are also available:
 
 ```text
-World of Warcraft/_retail_/Interface/AddOns/EJLoot
+/ejloot
+/ejl
 ```
 
-Then enable **EJ Loot** from the in-game AddOns menu.
+Use `/ejloot help` in chat to see the available command options.
+
+## Notes
+
+EJ Loot only knows about loot that the Encounter Journal exposes. If an item has not appeared in a scanned Encounter Journal loot table yet, EJ Loot cannot track it until you browse that loot in game.
+
+Remembered collectibles are stored locally in saved variables. Collected items are pruned automatically, and hidden tracked collectibles can be restored from the options panel.
 
 ## License
 

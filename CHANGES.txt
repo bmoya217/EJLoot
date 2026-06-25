@@ -1,3 +1,13 @@
-create addon options
-- same minimap dropdown functionality
-- manually hide seen collectibles from being tracked
+# v0.3.0
+
+- Added an EJ Loot options panel for display, minimap, and no-instance collectible settings.
+- Added per-collectible tracking controls so individual remembered mounts, toys, and pets can be hidden.
+- Added a "Track all" control to restore hidden collectibles by type.
+- Added an "Open options" entry to the minimap menu.
+- Updated saved settings handling for the new options and hidden collectible state.
+
+# v0.2.0
+
+- Added mount, toy, and pet tracking from Encounter Journal loot.
+- Added remembered collectibles for use when no Encounter Journal instance is selected.
+- Added collection pruning so learned appearances and collectibles are removed from the list.
